@@ -11,7 +11,7 @@ pub struct BTree {
 }
 
 impl BTree {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             tree: Arc::new(RwLock::new(BTreeMap::new())),
         }
@@ -50,7 +50,7 @@ mod tests {
             LogRecordPos {
                 file_id: 1,
                 offset: 10,
-                size: 11,
+                // size: 11,
             },
         );
         assert!(res1 == true);
@@ -60,7 +60,7 @@ mod tests {
             LogRecordPos {
                 file_id: 11,
                 offset: 22,
-                size: 11,
+                // size: 11,
             },
         );
         assert!(res2 == true);
@@ -87,7 +87,7 @@ mod tests {
             LogRecordPos {
                 file_id: 1,
                 offset: 10,
-                size: 11,
+                // size: 11,
             },
         );
         assert!(res1 == true);
@@ -96,7 +96,7 @@ mod tests {
             LogRecordPos {
                 file_id: 11,
                 offset: 22,
-                size: 11,
+                // size: 11,
             },
         );
         assert!(res2 == true);

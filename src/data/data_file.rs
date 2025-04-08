@@ -4,6 +4,10 @@ use parking_lot::RwLock;
 
 use crate::{errors::Result, fio};
 
+use super::log_record::ReadLogRecord;
+
+pub const DATA_FILE_NAME_SUFFIX: &str = "./data";
+
 pub struct DataFile {
     // 数据文件id
     file_id: Arc<RwLock<u32>>,
@@ -25,6 +29,19 @@ impl DataFile {
 
     pub fn get_file_id(&self) -> u32 {
         *self.file_id.read()
+    }
+
+    pub fn read_log_record(&self, offset: u64) -> Result<ReadLogRecord> {
+        todo!()
+    }
+
+    pub fn set_write_off(&self, offset: u64) {
+        let mut write_guard = self.write_off.write();
+        *write_guard = offset;
+    }
+
+    pub fn write(&self, buf: &[u8]) -> Result<usize> {
+        todo!()
     }
 
     pub fn sync(&self) -> Result<()> {

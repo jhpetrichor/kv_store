@@ -2,7 +2,7 @@
 pub struct LogRecordPos {
     pub(crate) file_id: u32,
     pub(crate) offset: u64,
-    pub(crate) size: u64,
+    // pub(crate) size: u64,
 }
 
 /// LogRecord写入数据文件的记录
@@ -13,6 +13,7 @@ pub struct LogRecord {
     pub(crate) rec_type: LogRecordType,
 }
 
+#[derive(PartialEq, Eq)]
 pub enum LogRecordType {
     NORMAL = 1,
 
@@ -23,4 +24,10 @@ impl LogRecord {
     pub fn encode(&self) -> Vec<u8> {
         todo!()
     }
+}
+
+/// 从数据文件中读取的log_record 信息
+pub struct ReadLogRecord {
+    pub record: LogRecord,
+    pub size: u64,
 }
