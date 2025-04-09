@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fs, path::PathBuf, sync::{Arc, PoisonError}};
+use std::{collections::HashMap, fs, path::PathBuf, sync::Arc};
 
 use bytes::Bytes;
 use log::{error, warn};
@@ -148,7 +148,7 @@ impl Engine {
         // key 是够存在
         let pos = self.index.get(key.to_vec());
         if pos.is_none() {
-            return Ok(())
+            return Ok(());
         }
         // 构造 LogRecord，标识其被删除
         let mut record = LogRecord {
@@ -167,7 +167,6 @@ impl Engine {
 
         Ok(())
     }
-
 
     // 追加数据到当前活跃文件中
     fn append_log_record(&self, record: &mut LogRecord) -> Result<LogRecordPos> {
@@ -246,7 +245,7 @@ impl Engine {
                     file_id: *file_id,
                     offset,
                 };
-                let  ok = match log_record.rec_type {
+                let ok = match log_record.rec_type {
                     LogRecordType::NORMAL => {
                         self.index.put(log_record.key.to_vec(), log_record_pos)
                     }
@@ -257,7 +256,7 @@ impl Engine {
                 }
 
                 // 更新offset，下一次读取时候的开始位置
-                offset += size;
+                offset += size as u64;
             }
             // 如果当前文件时活跃文件，则需要设置活跃文件offset，供新数据写入
             if i == self.file_ids.len() {

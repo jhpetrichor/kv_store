@@ -11,7 +11,7 @@ use parking_lot::RwLock;
 
 use crate::errors::{Errors, Result};
 
-use super::IOManger;
+use super::IOManager;
 
 /// FileIO 标准系统文件IO
 pub struct FileIO {
@@ -20,11 +20,31 @@ pub struct FileIO {
 }
 
 impl FileIO {
+    // pub fn new(file_name: &PathBuf) -> Result<Self> {
+    //     match OpenOptions::new()
+    //         .create(true)
+    //         .read(true)
+    //         .append(true) // 或者 append(true)
+    //         .open(file_name)
+    //     {
+    //         Ok(file) => Ok(Self {
+    //             fd: Arc::new(RwLock::new(file)),
+    //         }),
+    //         Err(e) => {
+    //             error!(
+    //                 "Failed to open file: {:?}, error kind: {:?}, error msg: {}",
+    //                 file_name,
+    //                 e.kind(),
+    //                 e.to_string()
+    //             );
+    //         }
+    //     }
+    // }
     pub fn new(file_name: &PathBuf) -> Result<Self> {
         match OpenOptions::new()
             .create(true)
             .read(true)
-            .write(true)
+            // .write(true)
             .append(true)
             .open(file_name)
         {
@@ -35,13 +55,13 @@ impl FileIO {
             }
             Err(e) => {
                 error!("Failed to open file: {e}");
-                return Err(Errors::FailedToReadFromDataFile);
+                return Err(Errors::FailedToOpenDataFile);
             }
         }
     }
 }
 
-impl IOManger for FileIO {
+impl IOManager for FileIO {
     fn read(&self, buf: &mut [u8], offset: u64) -> crate::errors::Result<usize> {
         let read_guard = self.fd.read();
         match read_guard.read_at(buf, offset) {
@@ -78,14 +98,12 @@ impl IOManger for FileIO {
 
 #[cfg(test)]
 mod tests {
-    use std::str;
     use std::{
-        fs::{self, read_to_string, File},
-        io::BufRead,
+        fs::{self, read_to_string},
         path::PathBuf,
     };
 
-    use crate::fio::IOManger;
+    use crate::fio::IOManager;
 
     use super::FileIO;
 

@@ -1,3 +1,7 @@
+use core::panic;
+
+use prost::length_delimiter_len;
+
 #[derive(Clone, Copy, Debug)]
 pub struct LogRecordPos {
     pub(crate) file_id: u32,
@@ -20,8 +24,22 @@ pub enum LogRecordType {
     DELETED = 2,
 }
 
+impl LogRecordType {
+    pub fn from_u8(v: u8) -> Self {
+        match v {
+            1 => LogRecordType::NORMAL,
+            2 => LogRecordType::DELETED,
+            _ => panic!("Unknown log record type!"),
+        }
+    }
+}
+
 impl LogRecord {
     pub fn encode(&self) -> Vec<u8> {
+        todo!()
+    }
+
+    pub fn get_crc(&mut self) -> u32 {
         todo!()
     }
 }
@@ -29,5 +47,10 @@ impl LogRecord {
 /// 从数据文件中读取的log_record 信息
 pub struct ReadLogRecord {
     pub(crate) record: LogRecord,
-    pub(crate) size: u64,
+    pub(crate) size: usize,
+}
+
+/// 获取Logrecord header部分的最大长度
+pub fn max_log_record_header_size() -> usize {
+    std::mem::size_of::<u8>() + length_delimiter_len(std::u32::MAX as usize) * 2
 }

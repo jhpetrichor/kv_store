@@ -47,4 +47,7 @@ pub enum Errors {
 
     #[error("Read data file EOF!")]
     ReadDataFileEOF,
+
+    #[error("Invalid crc value, log record maybe corrupted!")]
+    InvalidLogRecordCrc,
 }
