@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fs, path::PathBuf, sync::Arc};
+use std::{collections::HashMap, fs, path::PathBuf, sync::{Arc, PoisonError}};
 
 use bytes::Bytes;
 use log::{error, warn};
@@ -139,6 +139,36 @@ impl Engine {
         Ok(log_record.value.into())
     }
 
+    /// 根据key删除对应数据
+    pub fn delete(&self, key: Bytes) -> Result<()> {
+        // 判断key的有效性
+        if key.is_empty() {
+            return Err(Errors::KeyIsEmpty);
+        }
+        // key 是够存在
+        let pos = self.index.get(key.to_vec());
+        if pos.is_none() {
+            return Ok(())
+        }
+        // 构造 LogRecord，标识其被删除
+        let mut record = LogRecord {
+            key: key.to_vec(),
+            value: Default::default(),
+            rec_type: LogRecordType::DELETED,
+        };
+
+        // 将数据追写入大数据文件中
+        self.append_log_record(&mut record)?;
+        // 更新（删除）内存索引
+        let ok = self.index.delete(key.to_vec());
+        if !ok {
+            return Err(Errors::IndexUpdateFailed);
+        }
+
+        Ok(())
+    }
+
+
     // 追加数据到当前活跃文件中
     fn append_log_record(&self, record: &mut LogRecord) -> Result<LogRecordPos> {
         let dir_path = self.options.dir_path.clone();
@@ -216,12 +246,16 @@ impl Engine {
                     file_id: *file_id,
                     offset,
                 };
-                match log_record.rec_type {
+                let  ok = match log_record.rec_type {
                     LogRecordType::NORMAL => {
                         self.index.put(log_record.key.to_vec(), log_record_pos)
                     }
                     LogRecordType::DELETED => self.index.delete(log_record.key.to_vec()),
                 };
+                if !ok {
+                    return Err(Errors::IndexUpdateFailed);
+                }
+
                 // 更新offset，下一次读取时候的开始位置
                 offset += size;
             }

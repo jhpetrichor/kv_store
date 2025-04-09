@@ -10,11 +10,11 @@ pub const DATA_FILE_NAME_SUFFIX: &str = "./data";
 
 pub struct DataFile {
     // 数据文件id
-    file_id: Arc<RwLock<u32>>,
+    pub(crate) file_id: Arc<RwLock<u32>>,
     // 当前写便宜，记录文件写到什么位置
-    write_off: Arc<RwLock<u64>>,
+    pub(crate) write_off: Arc<RwLock<u64>>,
     // IO 管理
-    io_manger: Box<dyn fio::IOManger>,
+    pub(crate) io_manger: Box<dyn fio::IOManger>,
 }
 
 impl DataFile {

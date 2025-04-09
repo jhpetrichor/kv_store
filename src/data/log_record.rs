@@ -28,6 +28,6 @@ impl LogRecord {
 
 /// 从数据文件中读取的log_record 信息
 pub struct ReadLogRecord {
-    pub record: LogRecord,
-    pub size: u64,
+    pub(crate) record: LogRecord,
+    pub(crate) size: u64,
 }
