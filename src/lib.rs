@@ -5,3 +5,7 @@ pub mod index;
 
 pub mod db;
 pub mod options;
+
+#[allow(unused)]
+mod tests;
+mod utils;

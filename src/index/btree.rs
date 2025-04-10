@@ -6,6 +6,7 @@ use crate::data::log_record::LogRecordPos;
 
 use super::Indexer;
 
+#[derive(Clone)]
 pub struct BTree {
     tree: Arc<RwLock<BTreeMap<Vec<u8>, LogRecordPos>>>,
 }
@@ -21,7 +22,8 @@ impl BTree {
 impl Indexer for BTree {
     fn put(&self, key: Vec<u8>, pos: LogRecordPos) -> bool {
         let mut write_guard = self.tree.write();
-        write_guard.insert(key, pos);
+        // write_guard.insert(key, pos);
+        write_guard.entry(key).and_modify(|v| *v = pos).or_insert(pos);
         true
     }
 

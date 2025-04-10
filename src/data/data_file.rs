@@ -27,7 +27,7 @@ pub struct DataFile {
 impl DataFile {
     pub fn new(dir_path: PathBuf, file_id: u32) -> Result<Self> {
         // 根据path和id构造出完整的文件名称
-        let file_name = get_data_file_name(&dir_path, file_id);
+        let file_name: PathBuf = get_data_file_name(&dir_path, file_id);
         // 初始化 io manager
         let io_manager = new_io_manager(&file_name)?;
 
@@ -109,11 +109,15 @@ impl DataFile {
     }
 }
 
-fn get_data_file_name(path: &PathBuf, file_id: u32) -> PathBuf {
-    // 文件名
+// pub fn get_data_file_name(dir_path: &PathBuf, file_id: u32) -> PathBuf {
+//     let name = std::format!("{:09}", file_id) + DATA_FILE_NAME_SUFFIX;
+//     dir_path.join(name)
+// }
+
+pub fn get_data_file_name(dir_path: &PathBuf, file_id: u32) -> PathBuf {
     PathBuf::from(format!(
-        "{}{:09}{}",
-        path.to_str().unwrap(),
+        "{}/{:09}{}",
+        dir_path.to_str().unwrap(),
         file_id,
         DATA_FILE_NAME_SUFFIX
     ))
@@ -121,20 +125,107 @@ fn get_data_file_name(path: &PathBuf, file_id: u32) -> PathBuf {
 
 #[cfg(test)]
 mod tests {
-    use std::path::PathBuf;
+    use crate::data::log_record::{LogRecord, LogRecordType};
 
     use super::DataFile;
-
 
     #[test]
     fn test_new_data_file() {
         let dir_path = std::env::temp_dir();
         let data_file = DataFile::new(dir_path, 9090);
-        println!("{:?}", data_file.err());
-        // assert!(data_file.is_ok());
+        assert!(data_file.is_ok());
 
-        // let data_file = data_file.unwrap();
-        // assert_eq!(data_file.get_file_id(), 0);
+        let data_file: DataFile = data_file.unwrap();
+        assert_eq!(data_file.get_file_id(), 9090);
+    }
 
-    }   
+    #[test]
+    fn test_data_file_write() {
+        let dir_path = std::env::temp_dir();
+        let data_file_res1 = DataFile::new(dir_path.clone(), 100);
+        assert!(data_file_res1.is_ok());
+        let data_file1 = data_file_res1.unwrap();
+        assert_eq!(data_file1.get_file_id(), 100);
+
+        let write_res1 = data_file1.write("aaa".as_bytes());
+        assert!(write_res1.is_ok());
+        assert_eq!(write_res1.unwrap(), 3 as usize);
+
+        let write_res2 = data_file1.write("bbb".as_bytes());
+        assert!(write_res2.is_ok());
+        assert_eq!(write_res2.unwrap(), 3 as usize);
+
+        let write_res3 = data_file1.write("ccc".as_bytes());
+        assert!(write_res3.is_ok());
+        assert_eq!(write_res3.unwrap(), 3 as usize);
+    }
+
+    #[test]
+    fn test_data_file_sync() {
+        let dir_path = std::env::temp_dir();
+        let data_file_res1 = DataFile::new(dir_path.clone(), 200);
+        assert!(data_file_res1.is_ok());
+        let data_file1 = data_file_res1.unwrap();
+        assert_eq!(data_file1.get_file_id(), 200);
+
+        let sync_res = data_file1.sync();
+        assert!(sync_res.is_ok());
+    }
+
+    #[test]
+    fn test_data_file_read_log_record() {
+        let dir_path = std::env::temp_dir();
+        let data_file_res1 = DataFile::new(dir_path.clone(), 700);
+        assert!(data_file_res1.is_ok());
+        let data_file1 = data_file_res1.unwrap();
+        assert_eq!(data_file1.get_file_id(), 700);
+
+        let enc1 = LogRecord {
+            key: "name".as_bytes().to_vec(),
+            value: "bitcask-rs-kv".as_bytes().to_vec(),
+            rec_type: LogRecordType::NORMAL,
+        };
+        let write_res1 = data_file1.write(&enc1.encode());
+        assert!(write_res1.is_ok());
+
+        // 从起始位置读取
+        let read_res1 = data_file1.read_log_record(0);
+        assert!(read_res1.is_ok());
+        let read_enc1 = read_res1.ok().unwrap().record;
+        assert_eq!(enc1.key, read_enc1.key);
+        assert_eq!(enc1.value, read_enc1.value);
+        assert_eq!(enc1.rec_type, read_enc1.rec_type);
+
+        // 从新的位置开启读取
+        let enc2 = LogRecord {
+            key: "name".as_bytes().to_vec(),
+            value: "new-value".as_bytes().to_vec(),
+            rec_type: LogRecordType::NORMAL,
+        };
+        let write_res2 = data_file1.write(&enc2.encode());
+        assert!(write_res2.is_ok());
+
+        let read_res2 = data_file1.read_log_record(24);
+        assert!(read_res2.is_ok());
+        let read_enc2 = read_res2.ok().unwrap().record;
+        assert_eq!(enc2.key, read_enc2.key);
+        assert_eq!(enc2.value, read_enc2.value);
+        assert_eq!(enc2.rec_type, read_enc2.rec_type);
+
+        // 类型是 Deleted
+        let enc3 = LogRecord {
+            key: "name".as_bytes().to_vec(),
+            value: Default::default(),
+            rec_type: LogRecordType::DELETED,
+        };
+        let write_res3 = data_file1.write(&enc3.encode());
+        assert!(write_res3.is_ok());
+
+        let read_res3 = data_file1.read_log_record(44);
+        assert!(read_res3.is_ok());
+        let read_enc3 = read_res3.ok().unwrap().record;
+        assert_eq!(enc3.key, read_enc3.key);
+        assert_eq!(enc3.value, read_enc3.value);
+        assert_eq!(enc3.rec_type, read_enc3.rec_type);
+    }
 }

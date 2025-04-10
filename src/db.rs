@@ -16,6 +16,7 @@ use crate::{
 
 const INITAL_DILE_ID: u32 = 0;
 
+// #[derive(Clone)]
 pub struct Engine {
     options: Arc<Options>,
     // 当前活跃文件
@@ -50,14 +51,17 @@ impl Engine {
         for v in data_files.iter() {
             file_ids.push(v.get_file_id());
         }
+        // 将新的数据文件放在前面，将旧的数据文件放在后面
+        data_files.reverse();
         // 将旧的数据文件保存在older_files中
         let mut older_files = HashMap::new();
         if data_files.len() > 1 {
-            for _ in 0..data_files.len() - 1 {
+            for _ in 0..=data_files.len() - 2 {
                 let file = data_files.pop().unwrap();
                 older_files.insert(file.get_file_id(), file);
             }
         }
+
         let active_file = match data_files.pop() {
             Some(v) => v,
             None => DataFile::new(dir_path.clone(), INITAL_DILE_ID)?,
