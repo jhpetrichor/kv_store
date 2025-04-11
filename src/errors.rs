@@ -50,4 +50,7 @@ pub enum Errors {
 
     #[error("Invalid crc value, log record maybe corrupted!")]
     InvalidLogRecordCrc,
+
+    #[error("Exceed the max batch num")]
+    ExceddMaxBatchNum,
 }

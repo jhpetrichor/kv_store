@@ -30,3 +30,36 @@ impl Default for Options {
         }
     }
 }
+
+/// 索引迭代器配置项
+#[derive(Clone)]
+pub struct IteratorOptions {
+    pub prefix: Vec<u8>,
+    pub reverse: bool,
+}
+
+impl Default for IteratorOptions {
+    fn default() -> Self {
+        Self {
+            prefix: Default::default(),
+            reverse: false,
+        }
+    }
+}
+
+/// 批量写入数据配置项
+pub struct WriteBatchOptions {
+    // 最大暂存数据量
+    pub max_batch_num: usize,
+    // 持久化选项
+    pub sync_writes: bool,
+}
+
+impl Default for WriteBatchOptions {
+    fn default() -> Self {
+        Self {
+            max_batch_num: 10000,
+            sync_writes: true,
+        }
+    }
+}

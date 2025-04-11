@@ -24,8 +24,10 @@ pub enum LogRecordType {
     NORMAL = 1,
 
     DELETED = 2,
-}
 
+    //事务完成标识
+    TXNFINISH = 3,
+}
 
 // LogRecordType::from_v8
 impl LogRecordType {
@@ -33,9 +35,16 @@ impl LogRecordType {
         match v {
             1 => LogRecordType::NORMAL,
             2 => LogRecordType::DELETED,
+            3 => LogRecordType::TXNFINISH,
             _ => panic!("Unknown log record type!"),
         }
     }
+}
+
+/// 暂存事务信息
+pub struct TransactionRecord {
+    pub(crate) record: LogRecord,
+    pub(crate) pos: LogRecordPos,
 }
 
 //
